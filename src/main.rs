@@ -14,8 +14,10 @@ fn print_bank_account_balance_to_screen(bank_account_balance: i32) {
 fn get_bank_account_action() -> Result<BankAccountAction, Error> {
     let mut input = String::new();
     stdin().read_line(&mut input);
+    input = input.trim().to_lowercase();
+    let number = input.parse::<f32>();
 
-    match input.trim().to_lowercase().as_str() {
+    match input.as_str() {
         "x" => Ok(BankAccountAction::Exit),
         "r" => Ok(BankAccountAction::RefreshBalance),
         // i if i.parse::f64() => Ok(BankAccountAction::Deposit(1_f64)),
