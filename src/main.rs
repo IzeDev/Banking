@@ -32,6 +32,21 @@ fn get_bank_account_action() -> Result<BankAccountAction, Error> {
         )),
     }
 }
+
+fn log_bank_action (action : BankAccountAction) -> Result<i32, Error> {
+    match action {
+        BankAccountAction::Exit => {
+            println!("Exiting...");
+            Ok(0)
+        },
+        _ => Err(Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "Unlogable error!",
+        ))        
+    }    
+}
+
+
 fn execute_bank_account_action(action: BankAccountAction, mut bank_account_balance: f32) -> BankAccountActionOutcome  {
 
     match action {
@@ -67,8 +82,18 @@ fn main() {
         if let Ok(action) = action {
             let outcome = execute_bank_account_action(action, bank_account_balance);
             match outcome {
-                BankAccountActionOutcome::Success(action, balance) => {
-                    bank_account_balance = balance;
+                BankAccountActionOutcome::Success(action, balance, log_message) => {
+                    match action {
+                        BankAccountAction::RefreshBalance => {
+
+                        },
+                        BankAccountAction::Exit => {
+
+                        },
+                        _ => {
+
+                        }
+                    }
                 },
                 BankAccountActionOutcome::Failure(action, error_message)=>{
                     println!("{}", error_message);
