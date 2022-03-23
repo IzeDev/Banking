@@ -1,4 +1,42 @@
-use std::{io::{stdin, Error}};
+use std::io::{stdin, Error};
+
+mod domain {
+    pub struct BankAccount {
+        balance: f32,
+    }
+
+    impl BankAccount {
+        pub fn new(balance: f32) -> BankAccount {
+            BankAccount { balance: balance }
+        }
+
+        pub fn withdraw(self: BankAccount, amount: f32) -> BankAccount {
+            BankAccount {
+                balance: self.balance - amount
+            }
+        }
+
+        pub fn deposit(self: BankAccount, amount: f32) -> BankAccount {
+            BankAccount {
+                balance: self.balance + amount
+            }
+        }
+    }
+
+    pub struct BankCustomer {
+        name: String,
+        bank_account: BankAccount,
+    }
+}
+
+mod banking {
+    use crate::domain::{self, BankCustomer};
+
+    fn app(bank_customer : BankCustomer, logger) {
+
+        
+    }
+}
 
 enum BankAccountAction {
     RefreshBalance,
@@ -9,7 +47,7 @@ enum BankAccountAction {
 
 enum BankAccountActionOutcome {
     Success(BankAccountAction, f32, String),
-    Failure(BankAccountAction, String)
+    Failure(BankAccountAction, String),
 }
 
 fn print_bank_account_balance_to_screen(bank_account_balance: f32) {
@@ -33,38 +71,46 @@ fn get_bank_account_action() -> Result<BankAccountAction, Error> {
     }
 }
 
-fn log_bank_action (action : BankAccountAction) -> Result<i32, Error> {
+fn log_bank_action(action: BankAccountAction) -> Result<i32, Error> {
     match action {
         BankAccountAction::Exit => {
             println!("Exiting...");
             Ok(0)
-        },
+        }
         _ => Err(Error::new(
             std::io::ErrorKind::InvalidInput,
             "Unlogable error!",
-        ))        
-    }    
+        )),
+    }
 }
 
-
-fn execute_bank_account_action(action: BankAccountAction, mut bank_account_balance: f32) -> BankAccountActionOutcome  {
-
+fn execute_bank_account_action(
+    action: BankAccountAction,
+    mut bank_account_balance: f32,
+) -> BankAccountActionOutcome {
     match action {
-        BankAccountAction::Exit => {
-            BankAccountActionOutcome::Success(action, bank_account_balance, String::from("Exiting..."))
-        }
-        BankAccountAction::RefreshBalance =>
-        {
-            BankAccountActionOutcome::Success(action, bank_account_balance, String::from("Refreshing..."))
-        }
+        BankAccountAction::Exit => BankAccountActionOutcome::Success(
+            action,
+            bank_account_balance,
+            String::from("Exiting..."),
+        ),
+        BankAccountAction::RefreshBalance => BankAccountActionOutcome::Success(
+            action,
+            bank_account_balance,
+            String::from("Refreshing..."),
+        ),
         BankAccountAction::Withdraw(amount) if bank_account_balance + amount >= 0f32 => {
             let log_message = format!("Withdrawal of {} from {}", amount, bank_account_balance);
             bank_account_balance += amount;
             BankAccountActionOutcome::Success(action, bank_account_balance, log_message)
         }
-        BankAccountAction::Withdraw(amount) => {
-            BankAccountActionOutcome::Failure(action, format!("{} is too much. The current balance is: {}", amount, bank_account_balance))
-        }
+        BankAccountAction::Withdraw(amount) => BankAccountActionOutcome::Failure(
+            action,
+            format!(
+                "{} is too much. The current balance is: {}",
+                amount, bank_account_balance
+            ),
+        ),
         BankAccountAction::Deposit(amount) => {
             let log_message = format!("Withdrawal of {} from {}", amount, bank_account_balance);
             bank_account_balance += amount;
@@ -82,26 +128,17 @@ fn main() {
         if let Ok(action) = action {
             let outcome = execute_bank_account_action(action, bank_account_balance);
             match outcome {
-                BankAccountActionOutcome::Success(action, balance, log_message) => {
-                    match action {
-                        BankAccountAction::RefreshBalance => {
-
-                        },
-                        BankAccountAction::Exit => {
-
-                        },
-                        _ => {
-
-                        }
-                    }
+                BankAccountActionOutcome::Success(action, balance, log_message) => match action {
+                    BankAccountAction::RefreshBalance => {}
+                    BankAccountAction::Exit => {}
+                    _ => {}
                 },
-                BankAccountActionOutcome::Failure(action, error_message)=>{
+                BankAccountActionOutcome::Failure(action, error_message) => {
                     println!("{}", error_message);
-                }                
+                }
             }
         } else if let Err(err) = action {
             println!("{}", err);
         }
-        
     }
 }
