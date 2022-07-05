@@ -1,4 +1,6 @@
-use std::io::{stdin, Error};
+use std::io::{Error, stdin};
+
+use banking::app;
 
 mod domain {
     pub struct BankAccount {
@@ -12,13 +14,13 @@ mod domain {
 
         pub fn withdraw(self: BankAccount, amount: f32) -> BankAccount {
             BankAccount {
-                balance: self.balance - amount
+                balance: self.balance - amount,
             }
         }
 
         pub fn deposit(self: BankAccount, amount: f32) -> BankAccount {
             BankAccount {
-                balance: self.balance + amount
+                balance: self.balance + amount,
             }
         }
     }
@@ -30,115 +32,52 @@ mod domain {
 }
 
 mod banking {
-    use crate::domain::{self, BankCustomer};
+    use std::io::Error;  
 
-    fn app(bank_customer : BankCustomer, logger) {
+    pub fn app<F1, F2>(deliver_output: F1, receive_input: F2)
+    where
+        F1: Fn(&str) -> (),
+        F2: Fn(&Vec<&str>) -> Result<String, Error>,
+    {
+        let no_bounds_vec = Vec::new();
+        let bounds = vec!["W", "D", "R", "X"];
 
-        
-    }
-}
 
-enum BankAccountAction {
-    RefreshBalance,
-    Deposit(f32),
-    Withdraw(f32),
-    Exit,
-}
+        loop {
+            deliver_output("Please enter a letter!");
+            let input: Result<String, Error> = receive_input(&no_bounds_vec);
+            if let Ok(inp) = input  {
+                let msg1 = "You wrote: ".to_owned();
+                let msg2 = inp.as_str();
+                let msg3 = msg1 + msg2;
+                deliver_output(msg3.as_str());
+            }
 
-enum BankAccountActionOutcome {
-    Success(BankAccountAction, f32, String),
-    Failure(BankAccountAction, String),
-}
+            let input: Result<String, Error> = receive_input(&bounds);
+            if let Ok(inp) = input  {
+                let msg1 = "You wrote: ".to_owned();
+                let msg2 = inp.as_str();
+                let msg3 = msg1 + msg2;
+                deliver_output(msg3.as_str());
+            }
 
-fn print_bank_account_balance_to_screen(bank_account_balance: f32) {
-    println!("The current balance is: {}", bank_account_balance);
-}
+            // else if let Err(err) = input {
+            //     // output(err.to_string());
+            // }
 
-fn get_bank_account_action() -> Result<BankAccountAction, Error> {
-    let mut input = String::new();
-    stdin().read_line(&mut input)?;
-    input = input.trim().to_lowercase();
-
-    match (input.as_str(), input.parse::<f32>()) {
-        ("x", _) => Ok(BankAccountAction::Exit),
-        ("r", _) => Ok(BankAccountAction::RefreshBalance),
-        (_, Ok(amount)) if amount < 0f32 => Ok(BankAccountAction::Withdraw(amount)),
-        (_, Ok(amount)) if amount > 0f32 => Ok(BankAccountAction::Deposit(amount)),
-        _ => Err(Error::new(
-            std::io::ErrorKind::InvalidInput,
-            "Could not handle input!",
-        )),
-    }
-}
-
-fn log_bank_action(action: BankAccountAction) -> Result<i32, Error> {
-    match action {
-        BankAccountAction::Exit => {
-            println!("Exiting...");
-            Ok(0)
-        }
-        _ => Err(Error::new(
-            std::io::ErrorKind::InvalidInput,
-            "Unlogable error!",
-        )),
-    }
-}
-
-fn execute_bank_account_action(
-    action: BankAccountAction,
-    mut bank_account_balance: f32,
-) -> BankAccountActionOutcome {
-    match action {
-        BankAccountAction::Exit => BankAccountActionOutcome::Success(
-            action,
-            bank_account_balance,
-            String::from("Exiting..."),
-        ),
-        BankAccountAction::RefreshBalance => BankAccountActionOutcome::Success(
-            action,
-            bank_account_balance,
-            String::from("Refreshing..."),
-        ),
-        BankAccountAction::Withdraw(amount) if bank_account_balance + amount >= 0f32 => {
-            let log_message = format!("Withdrawal of {} from {}", amount, bank_account_balance);
-            bank_account_balance += amount;
-            BankAccountActionOutcome::Success(action, bank_account_balance, log_message)
-        }
-        BankAccountAction::Withdraw(amount) => BankAccountActionOutcome::Failure(
-            action,
-            format!(
-                "{} is too much. The current balance is: {}",
-                amount, bank_account_balance
-            ),
-        ),
-        BankAccountAction::Deposit(amount) => {
-            let log_message = format!("Withdrawal of {} from {}", amount, bank_account_balance);
-            bank_account_balance += amount;
-            BankAccountActionOutcome::Success(action, bank_account_balance, log_message)
         }
     }
 }
 
 fn main() {
-    let mut bank_account_balance = 0f32;
-    loop {
-        print_bank_account_balance_to_screen(bank_account_balance);
-        println!("Type something!");
-        let action = get_bank_account_action();
-        if let Ok(action) = action {
-            let outcome = execute_bank_account_action(action, bank_account_balance);
-            match outcome {
-                BankAccountActionOutcome::Success(action, balance, log_message) => match action {
-                    BankAccountAction::RefreshBalance => {}
-                    BankAccountAction::Exit => {}
-                    _ => {}
-                },
-                BankAccountActionOutcome::Failure(action, error_message) => {
-                    println!("{}", error_message);
-                }
-            }
-        } else if let Err(err) = action {
-            println!("{}", err);
-        }
-    }
+    // Set up Console-Closures for the app
+    let print_msg = |msg: &str| println!("{}", msg);
+    let get_input = |bounds: &Vec<&str>| -> Result<String,Error> {
+        let mut input = String::new();
+        stdin().read_line(&mut input)?;
+        input = input.trim().to_lowercase();        
+        Ok(input)
+    };
+
+    app(print_msg, get_input);
 }
