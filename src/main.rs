@@ -1,7 +1,5 @@
 use std::io::{Error, stdin};
 
-use banking::app;
-
 mod domain {
     pub struct BankAccount {
         balance: f32,
@@ -39,35 +37,27 @@ mod banking {
         F1: Fn(&str) -> (),
         F2: Fn(&Vec<&str>) -> Result<String, Error>,
     {
-        let no_bounds_vec = Vec::new();
+        let no_bounds_vec: Vec<&str> = Vec::new();
         let bounds = vec!["W", "D", "R", "X"];
-
 
         loop {
             deliver_output("Please enter a letter!");
-            let input: Result<String, Error> = receive_input(&no_bounds_vec);
-            if let Ok(inp) = input  {
-                let msg1 = "You wrote: ".to_owned();
-                let msg2 = inp.as_str();
-                let msg3 = msg1 + msg2;
-                deliver_output(msg3.as_str());
-            }
-
             let input: Result<String, Error> = receive_input(&bounds);
-            if let Ok(inp) = input  {
-                let msg1 = "You wrote: ".to_owned();
-                let msg2 = inp.as_str();
-                let msg3 = msg1 + msg2;
-                deliver_output(msg3.as_str());
-            }
 
-            // else if let Err(err) = input {
-            //     // output(err.to_string());
-            // }
+            if let Ok(inp) = input  {
+                let mut msg = String::from("You wrote: ");
+                msg.push_str(&inp);
+                deliver_output(&msg);
+            }
+            else if let Err(err) = input {
+                deliver_output(&err.to_string());
+            }
 
         }
     }
 }
+
+use banking::app;
 
 fn main() {
     // Set up Console-Closures for the app
@@ -75,9 +65,20 @@ fn main() {
     let get_input = |bounds: &Vec<&str>| -> Result<String,Error> {
         let mut input = String::new();
         stdin().read_line(&mut input)?;
-        input = input.trim().to_lowercase();      
+        let input = input.trim().to_owned();
+
+        if bounds.is_empty() {
+            Ok(input)            
+        }
+        else if bounds.contains(&(input.as_str())) {
+            Ok(input)
+        }
+        else {
+            let mut error_text = String::from("Not within bounds! They are: ");
+            error_text.push_str(bounds.join(", ").as_str());
+            Err(Error::new(std::io::ErrorKind::InvalidInput, error_text))
+        }
           
-        Ok(input)
     };
 
     app(print_msg, get_input);
