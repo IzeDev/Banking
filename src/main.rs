@@ -75,7 +75,8 @@ fn main() {
     let get_input = |bounds: &Vec<&str>| -> Result<String,Error> {
         let mut input = String::new();
         stdin().read_line(&mut input)?;
-        input = input.trim().to_lowercase();        
+        input = input.trim().to_lowercase();      
+          
         Ok(input)
     };
 
