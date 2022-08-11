@@ -222,6 +222,7 @@ fn main() {
 
     let get_input = |bounds: &Vec<BankAction>| -> Result<String, IoError> {
         let mut input = String::new();
+        
         let read_input_attempt = stdin().read_line(&mut input);
 
         if read_input_attempt.is_ok() {
