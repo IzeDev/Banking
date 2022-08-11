@@ -31,27 +31,33 @@ mod domain {
             BankAccount { balance }
         }
 
-        pub fn withdraw(self: BankAccount, amount: f32) -> BankAccount {
-            BankAccount {
-                balance: self.balance - amount,
-            }
+        pub fn balance(&self) -> &f32 {
+            &self.balance
         }
 
-        pub fn deposit(self: BankAccount, amount: f32) -> BankAccount {
-            BankAccount {
-                balance: self.balance + amount,
-            }
+        pub fn withdraw(&mut self, amount: f32) {
+            self.balance = self.balance - amount;
+        }
+
+        pub fn deposit(&mut self, amount: f32) {
+            self.balance = self.balance + amount;
         }
     }
 
     pub struct BankCustomer {
-        name: String,
-        bank_account: BankAccount,
+        pub name: String,
+        pub bank_account: BankAccount,
     }
 
     impl BankCustomer {
         pub fn new(name: String, bank_account: BankAccount) -> BankCustomer {
             BankCustomer { name, bank_account }
+        }
+    }
+
+    impl fmt::Display for BankCustomer {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "{}\n{}", self.name, self.bank_account.balance)
         }
     }
 
@@ -118,11 +124,11 @@ mod domain {
             }
         }
     }
-
-
 }
 
 mod banking {
+    use std::num::ParseFloatError;
+
     use crate::{
         domain::{BankAccount, BankAction, BankCustomer},
         IoError,
@@ -130,10 +136,10 @@ mod banking {
 
     pub fn list_input_bounds(bounds: &Vec<BankAction>, separator: &str) -> String {
         bounds
-        .iter()
-        .map(|b| b.to_string())
-        .collect::<Vec<String>>()
-        .join(separator)
+            .iter()
+            .map(|b| b.to_string())
+            .collect::<Vec<String>>()
+            .join(separator)
     }
 
     pub fn app<F1, F2>(deliver_output: F1, receive_input: F2)
@@ -158,7 +164,7 @@ mod banking {
             BankAction::Exit {
                 command: String::from("Exit"),
                 code: String::from("X"),
-            }
+            },
         ];
 
         // Create/login Customer
@@ -187,7 +193,7 @@ mod banking {
         }
 
         let account = BankAccount::new(initial_balance.unwrap());
-        let customer = BankCustomer::new(customer_name.unwrap(), account);
+        let mut customer = BankCustomer::new(customer_name.unwrap(), account);
 
         // Bankloop
         loop {
@@ -196,20 +202,54 @@ mod banking {
             deliver_output(&instructions);
 
             match receive_input(&bounds) {
-                Ok(inp) => deliver_output(&format!("You wrote: {}", inp)),
-                Err(err) => deliver_output(&err.to_string()),
-            }
-        }
-        loop {
-            deliver_output("Please enter a letter!");
-            let input: Result<String, IoError> = receive_input(&bounds);
+                Ok(inp) => {
+                    deliver_output(&format!("You wrote: {}", inp));
+                    match BankAction::try_from(&inp) {
+                        Ok(action) => match action {
+                            BankAction::ReadCurrentBalance { command, code } => {
+                                let status = customer.to_string();
+                                deliver_output(&status);
+                            }
+                            BankAction::Withdraw { command, code } => {
+                                deliver_output("What would you like to withdraw?");
 
-            if let Ok(inp) = input {
-                let mut msg = String::from("You wrote: ");
-                msg.push_str(&inp);
-                deliver_output(&msg);
-            } else if let Err(err) = input {
-                deliver_output(&err.to_string());
+                                match receive_input(&no_bounds) {
+                                    Ok(inp) => match inp.trim().parse::<f32>() {
+                                        Ok(amount) => {
+                                            if amount <= customer.bank_account.balance().to_owned()
+                                            {
+                                                customer.bank_account.withdraw(amount);
+                                            }
+                                        }
+                                        Err(err) => deliver_output(&err.to_string()),
+                                    },
+                                    Err(err) => deliver_output(&err.to_string()),
+                                }
+                            }
+                            BankAction::Deposit { command, code } => {
+                                deliver_output("What would you like to deposit?");
+
+                                match receive_input(&no_bounds) {
+                                    Ok(inp) => match inp.trim().parse::<f32>() {
+                                        Ok(amount) => {
+                                            if 0.01f32 <= amount
+                                            {
+                                                customer.bank_account.deposit(amount);
+                                            }
+                                        }
+                                        Err(err) => deliver_output(&err.to_string()),
+                                    },
+                                    Err(err) => deliver_output(&err.to_string()),
+                                }
+                            }
+                            BankAction::Exit { command, code } => {
+                                break;
+                            }
+                        },
+                        Err(err) => deliver_output(&err.to_string()),
+                    }
+                }
+                Err(err) => deliver_output(&err.to_string()),
             }
         }
     }
@@ -221,7 +261,7 @@ fn main() {
     let print_msg = |msg: &str| println!("{}", msg);
 
     let get_input = |bounds: &Vec<BankAction>| -> Result<String, IoError> {
-        let mut input = String::new();        
+        let mut input = String::new();
         let read_input_attempt = stdin().read_line(&mut input);
 
         if read_input_attempt.is_ok() {
