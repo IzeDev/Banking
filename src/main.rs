@@ -1,5 +1,6 @@
 mod domain;
 mod app;
+mod utility;
 use std::io::stdin;
 use domain::domain::BankAction;
 use app::banking::{app, list_input_bounds};
