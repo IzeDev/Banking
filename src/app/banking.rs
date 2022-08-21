@@ -94,11 +94,11 @@ where
                 deliver_output(&format!("You wrote: {}", inp));
                 match BankAction::try_from(&inp) {
                     Ok(action) => match action {
-                        BankAction::ReadCurrentBalance { command, code } => {
+                        BankAction::ReadCurrentBalance { command: _, code: _ } => {
                             let status = customer.to_string();
                             deliver_output(&status);
                         }
-                        BankAction::Withdraw { command, code } => {
+                        BankAction::Withdraw { command: _, code: _ } => {
                             deliver_output("What would you like to withdraw?");
 
                             match receive_input(&no_bounds) {
@@ -113,7 +113,7 @@ where
                                 Err(err) => deliver_output(&err.to_string()),
                             }
                         }
-                        BankAction::Deposit { command, code } => {
+                        BankAction::Deposit { command: _, code: _ } => {
                             deliver_output("What would you like to deposit?");
 
                             match receive_input(&no_bounds) {
@@ -128,7 +128,7 @@ where
                                 Err(err) => deliver_output(&err.to_string()),
                             }
                         }
-                        BankAction::Exit { command, code } => {
+                        BankAction::Exit { command: _, code: _ } => {
                             break;
                         }
                     },

@@ -1,4 +1,4 @@
-use std::fmt::{self, write};
+use std::fmt;
 
 pub struct BankAccount {
     balance: f32,
@@ -95,10 +95,10 @@ impl fmt::Display for BankAction {
 impl PartialEq<String> for BankAction {
     fn eq(&self, other: &String) -> bool {
         match self {
-            BankAction::Withdraw { command, code } => code == other,
-            BankAction::Deposit { command, code } => code == other,
-            BankAction::ReadCurrentBalance { command, code } => code == other,
-            BankAction::Exit { command, code } => code == other,
+            BankAction::Withdraw { command: _, code } => code == other,
+            BankAction::Deposit { command: _, code } => code == other,
+            BankAction::ReadCurrentBalance { command: _, code } => code == other,
+            BankAction::Exit { command: _, code } => code == other,
         }
     }
 }
